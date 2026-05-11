@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>짬뽕네비 🍜</title>
+<style>
+  :root {
+    --bg: #0d0d14; --card: #1a1a28; --border: #252538;
+    --accent: #ff6b2b; --accent2: #ffb347;
+    --taxi: #ffd700; --subway: #4fc3f7; --bus: #4caf8a;
+    --text: #f0f0f8; --muted: #5a5a90;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; 
+-webkit-tap-highlight-color: transparent; }
+  body { background:var(--bg); color:var(--text); font-family:'Apple SD 
+Gothic Neo','Noto Sans KR',sans-serif; min-height:100vh; }
+  .app { max-width:480px; margin:0 auto; padding-bottom:48px; }
+  header { padding:28px 20px 16px; display:flex; align-items:center; 
+justify-content:space-between; }
+  .logo { font-size:26px; font-weight:900; 
+background:linear-gradient(135deg,var(--accent),var(--accent2)); 
+-webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .logo-sub { font-size:11px; color:var(--muted); letter-spacing:2px; 
+margin-top:-2px; }
+  .badge { background:rgba(255,107,43,0.1); border:1px solid 
+rgba(255,107,43,0.25); color:var(--accent); font-size:10px; 
+font-weight:700; padding:4px 10px; border-radius:20px; }
+  .input-card { margin:0 16px 14px; background:var(--card); border:1px 
+solid var(--border); border-radius:20px; padding:18px; }
+  .input-row { display:flex; align-items:center; gap:12px; }
+  .dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .dot.s { background:#4caf8a; box-shadow:0 0 8px #4caf8a; }
+  .dot.e { background:var(--accent); box-shadow:0 0 8px var(--accent); }
+  .vline { width:2px; height:20px; 
+background:linear-gradient(#4caf8a,var(--accent)); margin:6px 0 6px 4px; 
+opacity:0.3; }
+  .ac-wrap { position:relative; flex:1; }
+  input[type=text] { width:100%; background:#12121e; border:1px solid 
+var(--border); border-radius:12px; padding:12px 14px; color:var(--text); 
+font-size:14px; outline:none; transition:border-color 0.2s; 
+font-family:inherit; }
+  input[type=text]:focus { border-color:var(--accent); }
+  input::placeholder { color:var(--muted); }
+  .ac-list { display:none; position:absolute; top:calc(100% + 6px); 
+left:0; right:0; background:var(--card); border:1px solid var(--border); 
+border-radius:14px; z-index:100; overflow:hidden; box-shadow:0 8px 32px 
+rgba(0,0,0,0.5); }
+  .ac-list.show { display:block; }
+  .ac-item { padding:12px 14px; cursor:pointer; border-bottom:1px solid 
+var(--border); transition:background 0.15s; }
+  .ac-item:last-child { border-bottom:none; }
+  .ac-item:hover, .ac-item:active { background:#1e1e30; }
+  .ac-name { font-size:13px; font-weight:600; }
+  .ac-addr { font-size:11px; color:var(--muted); margin-top:2px; }
+  .opts { margin:0 16px 14px; display:flex; gap:8px; flex-wrap:wrap; }
+  .opt { background:var(--card); border:1px solid var(--border); 
+border-radius:20px; padding:8px 14px; font-size:12px; color:var(--muted); 
+cursor:pointer; transition:all 0.2s; font-family:inherit; }
+  .opt.active { background:rgba(255,107,43,0.15); 
+border-color:var(--accent); color:var(--accent); }
+  .btn { margin:0 16px 20px; width:calc(100% - 32px); padding:16px; 
+background:linear-gradient(135deg,var(--accent),var(--accent2)); 
+border:none; border-radius:16px; color:#fff; font-size:18px; 
+font-weight:900; cursor:pointer; letter-spacing:1px; font-family:inherit; 
+transition:opacity 0.15s; }
+  .btn:disabled { background:#2a2a3a; color:#444; cursor:not-allowed; }
+  .loading { display:none; padding:32px; text-align:center; }
+  .loading.show { display:block; }
+  .spinner { width:36px; height:36px; border:3px solid var(--border); 
+border-top-color:var(--accent); border-radius:50%; margin:0 auto 12px; 
+animation:spin 0.8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .loading-txt { color:var(--muted); font-size:13px; }
+  .err { display:none; margin:0 16px 14px; padding:14px 16px; 
+background:rgba(255,80,80,0.1); border:1px solid rgba(255,80,80,0.3); 
+border-radius:12px; color:#ff8080; font-size:13px; }
+  .err.show { display:block; }
+  .results { display:none; padding:0 16px; }
+  .results.show { display:block; }
+  .legend { display:flex; gap:14px; margin-bottom:12px; flex-wrap:wrap; }
+  .leg { display:flex; align-items:center; gap:5px; font-size:11px; 
+color:var(--muted); }
+  .leg-dot { width:8px; height:8px; border-radius:2px; }
+  .sec-title { font-size:10px; letter-spacing:3px; color:var(--muted); 
+text-transform:uppercase; margin-bottom:12px; }
+  .rcard { background:var(--card); border:1px solid var(--border); 
+border-radius:20px; padding:18px; margin-bottom:12px; cursor:pointer; 
+position:relative; overflow:hidden; transition:border-color 0.2s; }
+  .rcard.open { border-color:rgba(255,107,43,0.3); }
+  .rcard::before { content:''; position:absolute; left:0; top:0; bottom:0; 
+width:3px; }
+  .rcard.taxi_only::before { background:var(--taxi); }
+  .rcard.transit_only::before { background:var(--subway); }
+  .rcard.mixed::before { 
+background:linear-gradient(var(--accent),var(--accent2)); }
+  .rhead { display:flex; align-items:flex-start; 
+justify-content:space-between; margin-bottom:12px; }
+  .lbadge { display:inline-block; font-size:10px; font-weight:700; 
+padding:3px 8px; border-radius:10px; letter-spacing:1px; 
+margin-bottom:4px; }
+  .lbadge.taxi_only { background:rgba(255,215,0,0.15); color:var(--taxi); 
+}
+  .lbadge.transit_only { background:rgba(79,195,247,0.15); 
+color:var(--subway); }
+  .lbadge.mixed { background:rgba(255,107,43,0.15); color:var(--accent); }
+  .rname { font-size:14px; font-weight:700; }
+  .rstats { display:flex; gap:12px; flex-shrink:0; }
+  .stat { text-align:right; }
+  .sv { font-size:21px; font-weight:900; line-height:1; }
+  .sv.t { color:var(--text); }
+  .sv.c { color:var(--accent2); }
+  .sl { font-size:10px; color:var(--muted); margin-top:2px; }
+  .rbar { display:flex; height:7px; border-radius:4px; overflow:hidden; 
+gap:2px; }
+  .bseg { border-radius:4px; }
+  .steps { display:none; margin-top:14px; border-top:1px solid 
+var(--border); padding-top:14px; }
+  .steps.show { display:block; }
+  .step { display:flex; gap:12px; margin-bottom:14px; position:relative; }
+  .step:last-child { margin-bottom:0; }
+  .step::after { content:''; position:absolute; left:16px; top:36px; 
+bottom:-14px; width:2px; background:var(--border); }
+  .step:last-child::after { display:none; }
+  .sicon { width:34px; height:34px; border-radius:10px; display:flex; 
+align-items:center; justify-content:center; font-size:15px; flex-shrink:0; 
+}
+  .sicon.taxi { background:rgba(255,215,0,0.12); }
+  .sicon.subway { background:rgba(79,195,247,0.12); }
+  .sicon.bus { background:rgba(76,175,138,0.12); }
+  .sicon.walk { background:rgba(90,90,144,0.12); }
+  .scont { flex:1; min-width:0; }
+  .stitle { font-size:13px; font-weight:600; margin-bottom:3px; }
+  .sdesc { font-size:12px; color:var(--muted); line-height:1.5; }
+  .stime { font-size:12px; color:var(--accent2); font-weight:700; 
+white-space:nowrap; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <div class="logo">짬뽕네비 🍜</div>
+      <div class="logo-sub">택시 + 대중교통 혼합 최적 경로</div>
+    </div>
+    <div class="badge">BETA</div>
+  </header>
+  <div class="input-card">
+    <div class="input-row">
+      <div class="dot s"></div>
+      <div class="ac-wrap">
+        <input type="text" id="origin" placeholder="출발지 (예: 강남역)" 
+autocomplete="off">
+        <div class="ac-list" id="olist"></div>
+      </div>
+    </div>
+    <div class="vline"></div>
+    <div class="input-row">
+      <div class="dot e"></div>
+      <div class="ac-wrap">
+        <input type="text" id="dest" placeholder="목적지 (예: 홍대입구)" 
+autocomplete="off">
+        <div class="ac-list" id="dlist"></div>
+      </div>
+    </div>
+  </div>
+<button class="btn" id="searchBtn" onclick="search()">경로 탐색</button>
+  <div class="err" id="err"></div>
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-txt" id="loading-txt">경로 계산 중...</div>
+  </div>
+  <div class="results" id="results">
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" 
+style="background:var(--taxi)"></div>택시</div>
+      <div class="leg"><div class="leg-dot" 
+style="background:var(--subway)"></div>지하철</div>
+      <div class="leg"><div class="leg-dot" 
+style="background:var(--bus)"></div>버스</div>
+      <div class="leg"><div class="leg-dot" 
+style="background:var(--muted)"></div>도보</div>
+    </div>
+    <div class="sec-title">추천 경로</div>
+    <div id="rlist"></div>
+  </div>
+</div>
+<script>
+let oCoords = null, dCoords = null;
+
+function setupAC(inputId, listId, coordSetter) {
+  const inp = document.getElementById(inputId);
+  const lst = document.getElementById(listId);
+  let timer;
+  inp.addEventListener('input', () => {
+    clearTimeout(timer);
+    coordSetter(null);
+    const q = inp.value.trim();
+    if (q.length < 2) { lst.classList.remove('show'); return; }
+    timer = setTimeout(() => fetchPlaces(q, lst, inp, coordSetter), 350);
+  });
+  inp.addEventListener('blur', () => setTimeout(() => 
+lst.classList.remove('show'), 200));
+}
+
+async function fetchPlaces(q, lst, inp, coordSetter) {
+  try {
+    const res = await fetch(`/api/search?query=${encodeURIComponent(q)}`);
+    const places = await res.json();
+    if (!places.length) { lst.classList.remove('show'); return; }
+    lst.innerHTML = places.map((p, i) => `
+      <div class="ac-item" data-i="${i}">
+        <div class="ac-name">${p.name}</div>
+        <div class="ac-addr">${p.address}</div>
+      </div>
+    `).join('');
+    lst.querySelectorAll('.ac-item').forEach((el, i) => {
+      el.addEventListener('mousedown', () => {
+        inp.value = places[i].name;
+        coordSetter(places[i]);
+        lst.classList.remove('show');
+      });
+    });
+    lst.classList.add('show');
+  } catch(e) { console.error(e); }
+}
+
+setupAC('origin', 'olist', c => { oCoords = c; });
+setupAC('dest', 'dlist', c => { dCoords = c; });
+
+const segColor = t => 
+t==='taxi'?'#ffd700':t==='subway'?'#4fc3f7':t==='bus'?'#4caf8a':'#3a3a5a';
+
+function renderRoutes(routes) {
+  return routes.map((r, i) => `
+    <div class="rcard ${r.type}" id="card-${i}" onclick="toggle(${i})">
+      <div class="rhead">
+        <div>
+          <span class="lbadge ${r.type}">${r.label}</span>
+          <div class="rname">${r.name}</div>
+        </div>
+        <div class="rstats">
+          <div class="stat">
+            <div class="sv t">${r.totalMin}분</div>
+            <div class="sl">소요시간</div>
+          </div>
+          <div class="stat">
+            <div class="sv c">${r.totalCost.toLocaleString()}원</div>
+            <div class="sl">예상비용</div>
+          </div>
+        </div>
+      </div>
+      <div class="rbar">
+        ${r.segments.map(s => `<div class="bseg" 
+style="flex:${s.ratio};background:${segColor(s.type)};opacity:${s.type==='walk'?0.3:1}"></div>`).join('')}
+      </div>
+      <div class="steps" id="steps-${i}">
+        ${r.steps.map(s => `
+          <div class="step">
+            <div class="sicon ${s.type}">${s.icon}</div>
+            <div class="scont">
+              <div class="stitle">${s.title}</div>
+              ${s.desc ? `<div class="sdesc">${s.desc}</div>` : ''}
+            </div>
+            <div class="stime">${s.time}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggle(i) {
+  document.getElementById(`steps-${i}`).classList.toggle('show');
+  document.getElementById(`card-${i}`).classList.toggle('open');
+}
+
+async function search() {
+  const errEl = document.getElementById('err');
+  const loadEl = document.getElementById('loading');
+  const resEl = document.getElementById('results');
+  const btn = document.getElementById('searchBtn');
+  errEl.classList.remove('show');
+  resEl.classList.remove('show');
+  if (!document.getElementById('origin').value.trim() || 
+!document.getElementById('dest').value.trim()) {
+    errEl.textContent = '출발지와 목적지를 입력해주세요.'; 
+errEl.classList.add('show'); return;
+  }
+  if (!oCoords || !dCoords) {
+    errEl.textContent = '장소를 자동완성 목록에서 선택해주세요.'; 
+errEl.classList.add('show'); return;
+  }
+  btn.disabled = true;
+  loadEl.classList.add('show');
+  try {
+    const res = await 
+fetch(`/api/routes?ox=${oCoords.x}&oy=${oCoords.y}&dx=${dCoords.x}&dy=${dCoords.y}&oname=${encodeURIComponent(oCoords.name)}&dname=${encodeURIComponent(dCoords.name)}`);
+    const routes = await res.json();
+    if (!routes.length) throw new Error('경로를 찾을 수 없어요.');
+    document.getElementById('rlist').innerHTML = renderRoutes(routes);
+    loadEl.classList.remove('show');
+    resEl.classList.add('show');
+    setTimeout(() => toggle(0), 100);
+  } catch(e) {
+    loadEl.classList.remove('show');
+    errEl.textContent = '오류: ' + e.message;
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
