@@ -6,12 +6,13 @@ export default async function handler(req, res) {
   if (!ox || !oy || !dx || !dy) return res.status(400).json({ error: '좌표 필요' });
 
   try {
+    const encodedKey = encodeURIComponent(process.env.ODSAY_KEY);
     const response = await fetch(
-      `https://api.odsay.com/v1/api/searchPubTransPathT?SX=${ox}&SY=${oy}&EX=${dx}&EY=${dy}&apiKey=${process.env.ODSAY_KEY}`
+      `https://api.odsay.com/v1/api/searchPubTransPathT?SX=${ox}&SY=${oy}&EX=${dx}&EY=${dy}&apiKey=${encodedKey}`
     );
     const data = await response.json();
 
-    if (data.error) return res.status(500).json({ error: data.error.message });
+    if (data.error) return res.status(500).json({ error: data.error[0]?.message || 'ODsay 오류', raw: data });
 
     const paths = data.result?.path || [];
     if (!paths.length) return res.status(404).json({ error: '경로 없음' });
@@ -38,7 +39,7 @@ export default async function handler(req, res) {
         duration: (info.totalTime || 0) * 60,
         distance: (info.totalDistance || 0) * 1000,
         fare: info.payment || 1400,
-        transfers: info.busTransitCount + info.subwayTransitCount - 1,
+        transfers: (info.busTransitCount || 0) + (info.subwayTransitCount || 0) - 1,
         steps
       };
     }));
